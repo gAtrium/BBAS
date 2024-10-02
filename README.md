@@ -1,16 +1,18 @@
-# betterbetteradbsync
+# Better Better ADB sync
+Why fix a python script when you can write a new tool?
 
-A new Flutter project.
+# BUGS
+* RCE related to calling the adb pull, so be careful about that
+* Should there be any unicode characters in the filename, pull operation will fail based on system's locale settings (Borks on windows)
 
-## Getting Started
+# Missing features
+* Pushing to the device
+* Cross-Sync (Syncing files that do not exist in one of the devices (Puller/Pullee))
+* CHECKSUM mode, more resource intensive, but should ward off any questionmarks. (Should use an sqlite file)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Features that could be neat if added in the future
+* Android mode (android app that communicates over a reverse TCP shell to back up critical data such as contacts, messages etc)
+* Wireless mode (Which would make the ADB in the title optional, so we would be left with Better Better Sync, and that acronym has long been taken)
+* Recovery Mode (Needs a binary for target arch, we could pull partitions that require imaging and tar over computer)
+* Be even more ambitious, too ambitious
+* Find a better better name.
