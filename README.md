@@ -4,7 +4,7 @@ Why fix a python script when you can write a new tool?
 # BUGS
 * RCE related to calling the adb pull, so be careful about that
 * Should there be any unicode characters in the filename, pull operation will fail based on system's locale settings (Borks on windows)
-* Doesn't skip already present files if the path contains spaces
+* ~~Doesn't skip already present files if the path contains spaces~~
 
 # Missing features
 * Pushing to the device

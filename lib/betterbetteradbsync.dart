@@ -30,7 +30,7 @@ String fixPath(String path) {
 Future<bool> pullRemoteSync_internal(String remotePath, String localPath, Function(String) updateStatus, Traverser remote, {bool fail_fast = false}) async {
   bool res = false;
   if (!remote.is_directory) {
-    File d_local = File(localPath + remote.filename);
+    File d_local = File(localPath + remote.filename.replaceAll("\\", ""));
     if (d_local.existsSync()) {
       //check if local file size is smaller than remote file size, if so, pull it
       num localSize = d_local.lengthSync();
@@ -41,7 +41,7 @@ Future<bool> pullRemoteSync_internal(String remotePath, String localPath, Functi
       }
       else {
         updateStatus("Skipping ${remote.filename}");
-        print("Skibbidy $remote.filename");
+        //print("Skibbidy ${remote.filename}");
         res = true;
       }
     }
