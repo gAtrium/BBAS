@@ -286,8 +286,9 @@ class _BBAS_frontState extends State<BBAS_front> with TickerProviderStateMixin {
                         setState(() {
                           currentStatus = "Traversing the remote path";
                         });
-                        traverser_remote = await AdbUtils.Traverse_Remote(remote_path);
-                        if (traverser_remote == null) {
+                        var intheFuture = AdbUtils.Traverse_Remote(remote_path).then((_traverser_remote) async {
+                        traverser_remote = _traverser_remote;
+                          if (traverser_remote == null) {
                           setState(() {
                             currentStatus = "Error while traversing remote directory.";
                             Syncing = false;
@@ -311,14 +312,45 @@ class _BBAS_frontState extends State<BBAS_front> with TickerProviderStateMixin {
                         }
                         num total_files = totalFilesInTraverser(traverser_remote!);
                         num transferred_files = 0;
-                        await pullRemoteSync_internal(remote_path, local_path, (String status) {
+                        var errorFiles = await pullRemoteSync_internal(remote_path, local_path, (String status) {
                           setState(() {
                             currentStatus = status;
                             transferred_files += 1;
                             percentage = (transferred_files / total_files) * 100;
                           });
                         }, traverser_remote!);
-                        
+                        if (errorFiles.isNotEmpty){
+                          showDialog(context: context, builder: (context) => SizedBox(
+                            width: 450,
+                            height: 600,
+                            child: AlertDialog(
+                              title: const Text("Error while syncing"),
+                              content: Column(
+                                children: [
+                                  const Text("The following files failed to sync:"),
+                                  SizedBox(
+                                    width: 400,
+                                    height: 400,
+                                    child: ListView(
+                                        children: errorFiles.split("\n").where((e) => e.isNotEmpty).map((e) => Text(e)).toList(),
+                                    ),
+                                  ),
+                                  ElevatedButton(onPressed: Navigator.of(context).pop, child: const Text("Thank you google")),
+                                ],
+                              ),
+                            ),
+                          ),
+                          barrierDismissible: false
+                          );
+                          setState(() {
+                            currentStatus = "Partially completed";
+                          });
+                        }
+                        setState(() {
+                          Syncing = false;
+                          shouldDisplayIndefinite = false;
+                        });
+                        });
                     }
                   },
                   child: Text(Syncing ? "Syncing" : "Sync"),
@@ -327,13 +359,38 @@ class _BBAS_frontState extends State<BBAS_front> with TickerProviderStateMixin {
                 ElevatedButton(onPressed: traverser_remote != null ? () async{
                   num total_files = totalFilesInTraverser(traverser_remote!);
                         num transferred_files = 0;
-                    await pullRemoteSync_internal(remote_path, local_path, (String status) {
+                    var failed_files = await pullRemoteSync_internal(remote_path, local_path, (String status) {
                           setState(() {
                             currentStatus = status;
                             transferred_files += 1;
                             percentage = (transferred_files / total_files) * 100;
                           });
                         }, traverser_remote!);
+                        if (failed_files.isNotEmpty){
+                          showDialog(context: context, builder: (context) => SizedBox(
+                            width: 450,
+                            height: 600,
+                            child: AlertDialog(
+                              title: const Text("Error while syncing"),
+                              content: Column(
+                                children: [
+                                  const Text("The following files failed to sync:"),
+                                  SizedBox(
+                                    width: 400,
+                                    height: 400,
+                                    child: ListView(
+                                        children: failed_files.split("\n").where((e) => e.isNotEmpty).map((e) => Text(e)).toList(),
+                                    ),
+                                  ),
+                                  ElevatedButton(onPressed: Navigator.of(context).pop, child: const Text("Thank you google")),
+                                ],
+                              ),
+                            ),
+                          ),
+                          barrierDismissible: false
+                          );
+                          
+                        }
                 }: null, child: Text(traverser_remote == null ? "No failed transfer" : "Retry failed transfer")),
               ],
             ),

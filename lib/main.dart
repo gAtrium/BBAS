@@ -1,9 +1,12 @@
 import 'package:betterbetteradbsync/adb_utils.dart';
 import 'package:betterbetteradbsync/front.dart';
+import 'package:betterbetteradbsync/w32_adb_executor.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   AdbUtils.initialize();
+  AdbCommandExecutor adbCommandExecutor = AdbCommandExecutor();
+  adbCommandExecutor.SpawnADBServer();
   runApp(const MyApp());
 }
 

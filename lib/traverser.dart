@@ -3,9 +3,10 @@ import 'dart:io';
 class Traverser {
   String filename;
   bool is_directory;
+  List<int> malformedChars;
   num size;
   List<Traverser> children ;
-  Traverser(this.filename, this.is_directory, {this.children = const [], this.size = 0});
+  Traverser(this.filename, this.is_directory, {this.children = const [],this.malformedChars = const [], this.size = 0});
 }
 
 Traverser traverseDirectory(String path) {

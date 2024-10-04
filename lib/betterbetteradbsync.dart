@@ -11,10 +11,10 @@ Future<String> PullFromRemoteDevice_Tree(String remotePath, String localPath, Fu
     return "Remote path is not a directory. ||Er";
   }
   
-  return await pullRemoteSync(remotePath, localPath, updateStatus, traverser_remote ) ? "Success" : "Error while pulling remote files. ||Er";
+  return await pullRemoteSync(remotePath, localPath, updateStatus, traverser_remote);
 }
 
-Future<bool> pullRemoteSync(String remotePath, String localPath, Function(String) updateStatus, Traverser remote) async {
+Future<String> pullRemoteSync(String remotePath, String localPath, Function(String) updateStatus, Traverser remote) async {
   //traverse remote path and check if it already exists in local path, if not, pull it
   return pullRemoteSync_internal(remotePath, localPath, updateStatus, remote);
 }
@@ -27,8 +27,8 @@ String fixPath(String path) {
   return _p;
   
 }
-Future<bool> pullRemoteSync_internal(String remotePath, String localPath, Function(String) updateStatus, Traverser remote, {bool fail_fast = false}) async {
-  bool res = false;
+Future<String> pullRemoteSync_internal(String remotePath, String localPath, Function(String) updateStatus, Traverser remote, {bool fail_fast = false}) async {
+  String res = "";
   if (!remote.is_directory) {
     File d_local = File(localPath + remote.filename.replaceAll("\\", ""));
     if (d_local.existsSync()) {
@@ -37,17 +37,28 @@ Future<bool> pullRemoteSync_internal(String remotePath, String localPath, Functi
       num remoteSize = remote.size;
       if (localSize < remoteSize) {
         updateStatus("Pulling ${remote.filename}");
-        res = await AdbUtils.pullFile(remote.filename, localPath);
+        String remoteFileName = remote.filename;
+        if(remote.malformedChars.isNotEmpty){
+          for(int charIndex in remote.malformedChars){
+            remoteFileName = remoteFileName.replaceRange(charIndex, charIndex+1, "*"); // replace the character with a wildcard, if it's at the end of the filename, god help us
+          }
+        }
+        res += await AdbUtils.pullFile(remoteFileName, localPath) ? "" : "${remote.filename}\n";
       }
       else {
         updateStatus("Skipping ${remote.filename}");
         //print("Skibbidy ${remote.filename}");
-        res = true;
       }
     }
     else {
       updateStatus("Pulling ${remote.filename}");
-      await AdbUtils.pullFile(remote.filename, "$localPath/${remote.filename.replaceAll("\\", "")}");
+      String remoteFileName = remote.filename;
+        if(remote.malformedChars.isNotEmpty){
+          for(int charIndex in remote.malformedChars){
+            remoteFileName = remoteFileName.replaceRange(charIndex, charIndex+1, "*"); // replace the character with a wildcard, if it's at the end of the filename, god help us
+          }
+        }
+      res += await AdbUtils.pullFile(remoteFileName, "$localPath/${remote.filename.replaceAll("\\", "")}") ? "" : "${remote.filename}\n";
     }    
   }
   else {
@@ -59,15 +70,12 @@ Future<bool> pullRemoteSync_internal(String remotePath, String localPath, Functi
       localDir.createSync(recursive: true);
     }
     if (remote.children.isEmpty) {
-      return true;
+      return "";
     }
     for (Traverser child in remote.children) {
-      bool res_new = await pullRemoteSync_internal("${child.filename}", "${localPath}", updateStatus, child);
-      res = res && res_new;
-  if(res == false && fail_fast) {
-    return false;
-    }
+      String res_new = await pullRemoteSync_internal("${child.filename}", "${localPath}", updateStatus, child);
+      res += "$res_new\n";
   }
   }
-  return res;
+  return res.trim();
 }
